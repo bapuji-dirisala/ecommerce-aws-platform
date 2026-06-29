@@ -1,0 +1,86 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+*.egg
+pip-log.txt
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Testing / coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+.tox/
+.mypy_cache/
+.ruff_cache/
+
+# IDE / editors
+.idea/
+.vscode/
+.cursor/
+*.swp
+*~
+
+# Learning / experimentation scratch space — never committed
+scratch/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Data — generated Parquet, local lakehouse state. Keep .gitkeep stubs.
+data/
+lakehouse/
+*.parquet
+*.duckdb
+*.db
+*.sqlite
+*.sqlite3
+!tests/**/*.parquet
+!tests/**/*.csv
+
+# Terraform
+terraform/.terraform/
+terraform/.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+*.tfplan
+terraform.tfvars
+terraform.tfvars.json
+*.auto.tfvars
+*.auto.tfvars.json
+.terraform.d/
+
+# LocalStack
+.localstack/
+volume/
+
+# Lambda build / packaging artefacts
+build/lambda-*/
+*.zip
+
+# Secrets — API keys, AWS credentials, personal tokens
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets/
+credentials/
+.aws/
+
+# Logs
+*.log
+logs/

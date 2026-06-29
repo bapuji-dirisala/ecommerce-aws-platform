@@ -1,0 +1,120 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "ecommerce-aws-platform"
+version = "0.1.0"
+description = "AWS-native e-commerce lakehouse — three ingestion paths into S3, Glue + Lambda + Step Functions orchestration, Lake Formation governance, Redshift Serverless + Spectrum BI. Everything in Terraform; every line of real AWS runs locally against LocalStack + DuckDB for a $0 demo path."
+readme = "README.md"
+requires-python = ">=3.11,<3.13"
+license = { file = "LICENSE" }
+authors = [
+    { name = "Bapuji Dirisala", email = "dirisala.bapuji@gmail.com" },
+]
+keywords = [
+    "data-engineering",
+    "aws",
+    "s3",
+    "glue",
+    "lambda",
+    "step-functions",
+    "redshift",
+    "lake-formation",
+    "terraform",
+    "localstack",
+]
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Software Development :: Libraries",
+]
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-cov>=5.0",
+    "ruff>=0.6",
+    "mypy>=1.10",
+    "pre-commit>=3.7",
+]
+# Phase 2 — synthetic e-commerce generator (orders, products, customers,
+# clickstream). Faker + pandas + pyarrow; same deterministic pattern as every
+# other repo in the portfolio.
+generator = [
+    "faker>=27.0",
+    "pandas>=2.2",
+    "pyarrow>=16.0",
+]
+# Phase 3+ — the AWS SDK layer used by Lambda handlers + local ingestion
+# scripts. moto drives all unit tests; LocalStack is the integration harness.
+aws = [
+    "boto3>=1.35",
+    "botocore>=1.35",
+    "moto[all]>=5.0",
+    "awscli-local>=0.22",
+]
+# Phase 6+ — the local Spark + warehouse analogues for the "deployed" services
+# we never actually run. DuckDB stands in for Athena + Redshift Spectrum
+# (same Parquet-over-S3 pattern); PySpark + delta-rs stands in for Glue + EMR.
+local-warehouse = [
+    "duckdb>=1.0",
+    "pyspark>=3.5,<4.0",
+    "delta-spark>=3.1,<4.0",
+    "deltalake>=0.19",
+]
+# Phase 11 — the FastAPI order-status service (lightweight; sits behind an
+# API Gateway → Lambda path in the committed Terraform).
+api = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.30",
+    "pydantic>=2.8",
+    "pydantic-settings>=2.4",
+]
+
+[project.scripts]
+ecom-aws = "ecom_aws.cli:main"
+
+[project.urls]
+Repository = "https://github.com/bapuji-dirisala/ecommerce-aws-platform"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/ecom_aws"]
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["tests"]
+pythonpath = ["src"]
+# AWS integration tests opt in explicitly via `-m aws` or `-m localstack` —
+# unit tests on `moto` run by default so the base install stays fast.
+addopts = "-v --strict-markers -m 'not aws and not localstack and not spark'"
+markers = [
+    "aws: hits a real AWS account (never run in CI)",
+    "localstack: requires LocalStack Community running on localhost:4566",
+    "spark: requires PySpark + delta-spark (opt-in; heavy install, Java 17 needed)",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+extend-exclude = ["data", "lakehouse", "terraform/.terraform", "*.md"]
+
+[tool.ruff.lint]
+select = [
+    "E", "W", "F", "I", "B", "C4", "UP", "N", "SIM",
+]
+ignore = [
+    "E501",  # line length — formatter owns it
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["N802"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = false
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true
