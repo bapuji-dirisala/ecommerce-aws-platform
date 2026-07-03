@@ -34,10 +34,10 @@ locals {
 module "s3_lakehouse" {
   source = "./modules/s3-lakehouse"
 
-  name_prefix            = local.name_prefix
-  bucket_suffix          = local.bucket_suffix
+  name_prefix             = local.name_prefix
+  bucket_suffix           = local.bucket_suffix
   noncurrent_version_days = var.lakehouse_retention_days
-  tags                   = local.common_tags
+  tags                    = local.common_tags
 }
 
 module "iam_baseline" {
