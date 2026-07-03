@@ -1,0 +1,19 @@
+# Real-AWS reference. Copy to `terraform.tfvars` for a dev deploy;
+# `terraform.tfvars` is gitignored so operator overrides never land in
+# version control. Deployment is OPTIONAL — the committed code is the
+# portfolio deliverable; this file documents the real-AWS variable set.
+#
+#   terraform apply -var-file=environments/dev/terraform.tfvars
+
+project                 = "ecom"
+environment             = "dev"
+aws_region              = "us-east-1"
+use_localstack          = false
+
+# Pin a suffix for a shared account so repeat applies don't rotate names.
+# Random suffix is fine for a solo-reader account.
+# bucket_name_suffix = "team42"
+
+# Longer retention in a real deployment so point-in-time recovery
+# windows match SOC2 / internal data retention policies.
+lakehouse_retention_days = 90
