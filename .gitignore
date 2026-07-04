@@ -84,5 +84,3 @@ credentials/
 # Logs
 *.log
 logs/
-terraform/.terraform/
-terraform/.terraform.lock.hcl
