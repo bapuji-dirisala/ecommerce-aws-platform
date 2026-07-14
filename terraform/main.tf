@@ -49,3 +49,18 @@ module "iam_baseline" {
   gold_bucket_arn   = module.s3_lakehouse.gold_bucket_arn
   tags              = local.common_tags
 }
+
+# Phase 3 — orders API ingest. Gated on var.lambda_orders_api_zip so the
+# baseline can `terraform validate` without a built Lambda artifact.
+module "orders_api_ingest" {
+  count  = var.lambda_orders_api_zip != "" ? 1 : 0
+  source = "./modules/orders-api-ingest"
+
+  name_prefix               = local.name_prefix
+  suffix                    = local.bucket_suffix
+  bronze_bucket_name        = module.s3_lakehouse.bronze_bucket
+  lambda_execution_role_arn = module.iam_baseline.lambda_execution_role_arn
+  lambda_zip_path           = var.lambda_orders_api_zip
+  log_retention_days        = var.log_retention_days
+  tags                      = local.common_tags
+}

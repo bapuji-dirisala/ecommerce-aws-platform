@@ -53,7 +53,7 @@ jobs:
           python -m pip install --upgrade pip
           # Each phase appends its extra here so the test suite exercises
           # every phase's code paths on CI. Phase 2 added [generator].
-          pip install -e ".[dev,generator]"
+          pip install -e ".[dev,generator,aws]"
 
       - name: pytest
         run: pytest -q

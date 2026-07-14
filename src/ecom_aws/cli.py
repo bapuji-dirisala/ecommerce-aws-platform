@@ -52,6 +52,29 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Clickstream event count (default: 20000).",
     )
 
+    # Phase 3 — local LocalStack ingest driver.
+    ing = subparsers.add_parser(
+        "ingest-local",
+        help="Invoke an ingestion handler against LocalStack (uses AWS_ENDPOINT_URL).",
+    )
+    ing.add_argument(
+        "path",
+        choices=("orders-api",),
+        help="Which ingest path to drive. More paths added in Phase 4+.",
+    )
+    ing.add_argument(
+        "--count",
+        type=int,
+        default=10,
+        help="How many orders to generate + POST (default: 10).",
+    )
+    ing.add_argument(
+        "--seed",
+        type=int,
+        default=42,
+        help="Generator seed for reproducibility.",
+    )
+
     return parser
 
 
@@ -84,6 +107,17 @@ def _handle_generate(args: argparse.Namespace) -> int:
     return 0
 
 
+def _handle_ingest_local(args: argparse.Namespace) -> int:
+    """Lazy-import ingest driver — moto/boto3 land only when invoked."""
+    from ecom_aws.ingest.local_driver import drive_orders_api_local
+
+    written = drive_orders_api_local(count=args.count, seed=args.seed)
+    for item in written:
+        print(f"  POST → {item['status']}  {item['bronze_s3_uri']}")
+    print(f"total: {len(written)} orders ingested via API Gateway → Lambda → bronze")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = _build_parser()
     args = parser.parse_args(argv)
@@ -92,6 +126,8 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     if args.command == "generate":
         return _handle_generate(args)
+    if args.command == "ingest-local":
+        return _handle_ingest_local(args)
     parser.print_help()
     return 0
 

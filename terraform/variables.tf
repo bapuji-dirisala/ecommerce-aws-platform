@@ -37,3 +37,15 @@ variable "lakehouse_retention_days" {
   type        = number
   default     = 30
 }
+
+variable "lambda_orders_api_zip" {
+  description = "Path to a pre-built orders API Lambda zip. Empty disables the Phase 3 module (safe default for CI validate)."
+  type        = string
+  default     = ""
+}
+
+variable "log_retention_days" {
+  description = "CloudWatch log retention for Lambda + API Gateway log groups."
+  type        = number
+  default     = 14
+}

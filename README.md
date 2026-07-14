@@ -10,7 +10,7 @@
 > consumers. Every service in Terraform; every IAM policy hand-written;
 > every line runs locally against LocalStack + DuckDB for a $0 demo.
 
-**Status (2026-10-25):** Phase 2 shipped — synthetic generator ships five bronze-ready Parquet datasets (products, customers, orders, order_items, clickstream) with full referential integrity, deterministic by seed, written in the exact Hive partition layout Glue + Athena + Redshift Spectrum pick up for pruning.
+**Status (2026-10-25):** Phase 3 shipped — real-time order ingest wired end-to-end: API Gateway HTTP API v2 → Python 3.11 Lambda → S3 bronze JSONL, hand-written handler + envelope, moto-tested, LocalStack-runnable, zero-cost deployable via a committed Terraform module.
 
 ## Why this project
 
@@ -64,7 +64,7 @@ me to spend money proving it works.
 | 0  | Scaffolding, tooling, CI                       | [docs/phase-00-scaffolding.md](docs/phase-00-scaffolding.md)  | shipped     |
 | 1  | Terraform baseline — S3 buckets + IAM roles (LocalStack-ready)| [docs/phase-01-terraform-baseline.md](docs/phase-01-terraform-baseline.md) | shipped     |
 | 2  | Synthetic generator — orders / products / customers / clickstream | [docs/phase-02-generator.md](docs/phase-02-generator.md) | shipped     |
-| 3  | Ingest path 1 — API Gateway → Lambda → S3 bronze (real-time orders) | *coming soon*                            | planned     |
+| 3  | Ingest path 1 — API Gateway → Lambda → S3 bronze (real-time orders) | [docs/phase-03-orders-api.md](docs/phase-03-orders-api.md) | shipped     |
 | 4  | Ingest path 2 — Partner CSV → S3 drop → EventBridge → Lambda → bronze | *coming soon*                          | planned     |
 | 5  | Ingest path 3 — Kinesis Firehose → S3 bronze (clickstream, hourly) | *coming soon*                             | planned     |
 | 6  | Glue Data Catalog + crawlers; Glue job: bronze → silver cast/dedup | *coming soon*                             | planned     |
