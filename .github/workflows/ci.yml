@@ -48,15 +48,13 @@ jobs:
           python-version: "3.11"
           cache: pip
 
-      - name: install package with dev extras
+      - name: install package with dev + per-phase extras
         run: |
           python -m pip install --upgrade pip
-          pip install -e ".[dev]"
+          # Each phase appends its extra here so the test suite exercises
+          # every phase's code paths on CI. Phase 2 added [generator].
+          pip install -e ".[dev,generator]"
 
-      # Each phase that adds a new extra adds it to this list so the test
-      # suite can exercise every phase's code paths on CI. Phase 0 ships
-      # with the base install only — later phases will append [aws],
-      # [generator], [api], [local-warehouse] as needed.
       - name: pytest
         run: pytest -q
 
