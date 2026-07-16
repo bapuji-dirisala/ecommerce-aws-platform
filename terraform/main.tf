@@ -93,3 +93,17 @@ module "clickstream_firehose" {
   log_retention_days         = var.log_retention_days
   tags                       = local.common_tags
 }
+
+# Phases 6 + 7 — Glue Data Catalog + crawlers + bronze→silver + silver→gold jobs.
+module "glue_catalog" {
+  source = "./modules/glue-catalog"
+
+  name_prefix   = local.name_prefix
+  suffix        = local.bucket_suffix
+  environment   = var.environment
+  bronze_bucket = module.s3_lakehouse.bronze_bucket
+  silver_bucket = module.s3_lakehouse.silver_bucket
+  gold_bucket   = module.s3_lakehouse.gold_bucket
+  glue_role_arn = module.iam_baseline.glue_service_role_arn
+  tags          = local.common_tags
+}

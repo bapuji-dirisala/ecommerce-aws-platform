@@ -56,14 +56,17 @@ aws = [
     "moto[all]>=5.0",
     "awscli-local>=0.22",
 ]
-# Phase 6+ — the local Spark + warehouse analogues for the "deployed" services
-# we never actually run. DuckDB stands in for Athena + Redshift Spectrum
-# (same Parquet-over-S3 pattern); PySpark + delta-rs stands in for Glue + EMR.
+# Phase 6+ — the local warehouse analogue (DuckDB stands in for Athena +
+# Redshift Spectrum: same Parquet-over-S3 pattern). CI pulls this in.
 local-warehouse = [
     "duckdb>=1.0",
+    "deltalake>=0.19",
+]
+# Opt-in heavy install for PySpark + delta-spark. Needed only when a
+# reader wants to execute the committed Glue job scripts locally.
+spark = [
     "pyspark>=3.5,<4.0",
     "delta-spark>=3.1,<4.0",
-    "deltalake>=0.19",
 ]
 # Phase 11 — the FastAPI order-status service (lightweight; sits behind an
 # API Gateway → Lambda path in the committed Terraform).
@@ -99,7 +102,10 @@ markers = [
 [tool.ruff]
 line-length = 100
 target-version = "py311"
-extend-exclude = ["data", "lakehouse", "terraform/.terraform", "*.md"]
+# Glue job scripts live in glue/jobs/ and are deliberately written in the
+# idiomatic PySpark style (functions as F; GlueContext) — ruff would
+# complain about those spellings even though they're the AWS convention.
+extend-exclude = ["data", "lakehouse", "terraform/.terraform", "glue/jobs", "*.md"]
 
 [tool.ruff.lint]
 select = [
