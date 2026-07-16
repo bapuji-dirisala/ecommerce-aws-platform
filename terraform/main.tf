@@ -64,3 +64,19 @@ module "orders_api_ingest" {
   log_retention_days        = var.log_retention_days
   tags                      = local.common_tags
 }
+
+# Phase 4 — partner CSV drop → EventBridge → Lambda → bronze. Gated the
+# same way as Phase 3 so the HCL still `validate`s without a built zip.
+module "partner_csv_ingest" {
+  count  = var.lambda_partner_csv_zip != "" ? 1 : 0
+  source = "./modules/partner-csv-ingest"
+
+  name_prefix               = local.name_prefix
+  suffix                    = local.bucket_suffix
+  environment               = var.environment
+  bronze_bucket_name        = module.s3_lakehouse.bronze_bucket
+  lambda_execution_role_arn = module.iam_baseline.lambda_execution_role_arn
+  lambda_zip_path           = var.lambda_partner_csv_zip
+  log_retention_days        = var.log_retention_days
+  tags                      = local.common_tags
+}

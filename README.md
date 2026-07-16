@@ -10,7 +10,7 @@
 > consumers. Every service in Terraform; every IAM policy hand-written;
 > every line runs locally against LocalStack + DuckDB for a $0 demo.
 
-**Status (2026-10-25):** Phase 3 shipped — real-time order ingest wired end-to-end: API Gateway HTTP API v2 → Python 3.11 Lambda → S3 bronze JSONL, hand-written handler + envelope, moto-tested, LocalStack-runnable, zero-cost deployable via a committed Terraform module.
+**Status (2026-10-25):** Phase 4 shipped — second ingestion path: partner drops CSV in a dedicated bucket → S3 EventBridge integration → EventBridge rule (prefix-filtered) → Lambda normalizes to the shared bronze envelope → S3 bronze. UTF-8 BOM tolerated, non-destructive processing, moto-tested.
 
 ## Why this project
 
@@ -65,7 +65,7 @@ me to spend money proving it works.
 | 1  | Terraform baseline — S3 buckets + IAM roles (LocalStack-ready)| [docs/phase-01-terraform-baseline.md](docs/phase-01-terraform-baseline.md) | shipped     |
 | 2  | Synthetic generator — orders / products / customers / clickstream | [docs/phase-02-generator.md](docs/phase-02-generator.md) | shipped     |
 | 3  | Ingest path 1 — API Gateway → Lambda → S3 bronze (real-time orders) | [docs/phase-03-orders-api.md](docs/phase-03-orders-api.md) | shipped     |
-| 4  | Ingest path 2 — Partner CSV → S3 drop → EventBridge → Lambda → bronze | *coming soon*                          | planned     |
+| 4  | Ingest path 2 — Partner CSV → S3 drop → EventBridge → Lambda → bronze | [docs/phase-04-partner-csv.md](docs/phase-04-partner-csv.md) | shipped     |
 | 5  | Ingest path 3 — Kinesis Firehose → S3 bronze (clickstream, hourly) | *coming soon*                             | planned     |
 | 6  | Glue Data Catalog + crawlers; Glue job: bronze → silver cast/dedup | *coming soon*                             | planned     |
 | 7  | Silver → gold Spark job (local PySpark; Glue production target) | *coming soon*                                | planned     |

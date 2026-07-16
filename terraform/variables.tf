@@ -44,6 +44,12 @@ variable "lambda_orders_api_zip" {
   default     = ""
 }
 
+variable "lambda_partner_csv_zip" {
+  description = "Path to a pre-built partner-csv Lambda zip. Empty disables the Phase 4 module."
+  type        = string
+  default     = ""
+}
+
 variable "log_retention_days" {
   description = "CloudWatch log retention for Lambda + API Gateway log groups."
   type        = number
