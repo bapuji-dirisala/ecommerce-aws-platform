@@ -1,0 +1,16 @@
+{
+  "tags": [
+    {
+      "key": "data_classification",
+      "values": ["public", "internal", "confidential", "restricted"]
+    },
+    {
+      "key": "sensitivity",
+      "values": ["low", "medium", "high", "pii"]
+    },
+    {
+      "key": "data_zone",
+      "values": ["bronze", "silver", "gold"]
+    }
+  ]
+}

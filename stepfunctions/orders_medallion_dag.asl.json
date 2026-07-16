@@ -1,0 +1,135 @@
+{
+  "Comment": "Daily orders medallion DAG — bronze → silver → gold → notify.",
+  "StartAt": "ParallelIngestSummary",
+  "States": {
+    "ParallelIngestSummary": {
+      "Type": "Parallel",
+      "Comment": "Fan-out: summarize what landed in bronze from each path.",
+      "Branches": [
+        {
+          "StartAt": "CountApiOrders",
+          "States": {
+            "CountApiOrders": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "Parameters": {
+                "FunctionName.$": "$.summary_lambda_arn",
+                "Payload": { "source": "api", "dataset": "orders", "date.$": "$.load_date" }
+              },
+              "ResultPath": "$.summary.api",
+              "End": true
+            }
+          }
+        },
+        {
+          "StartAt": "CountPartnerOrders",
+          "States": {
+            "CountPartnerOrders": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "Parameters": {
+                "FunctionName.$": "$.summary_lambda_arn",
+                "Payload": { "source": "partner-csv", "dataset": "orders", "date.$": "$.load_date" }
+              },
+              "ResultPath": "$.summary.partner",
+              "End": true
+            }
+          }
+        },
+        {
+          "StartAt": "CountFirehoseClickstream",
+          "States": {
+            "CountFirehoseClickstream": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "Parameters": {
+                "FunctionName.$": "$.summary_lambda_arn",
+                "Payload": { "source": "firehose", "dataset": "clickstream", "date.$": "$.load_date" }
+              },
+              "ResultPath": "$.summary.firehose",
+              "End": true
+            }
+          }
+        }
+      ],
+      "ResultPath": "$.ingest_summary",
+      "Next": "RunBronzeToSilver"
+    },
+    "RunBronzeToSilver": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName.$": "$.glue_bronze_to_silver",
+        "Arguments": {
+          "--BRONZE_PATH.$": "$.bronze_path",
+          "--SILVER_PATH.$": "$.silver_path",
+          "--load_date.$": "$.load_date"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": ["Glue.ConcurrentRunsExceededException"],
+          "IntervalSeconds": 60,
+          "MaxAttempts": 5,
+          "BackoffRate": 2.0
+        },
+        {
+          "ErrorEquals": ["States.TaskFailed"],
+          "IntervalSeconds": 30,
+          "MaxAttempts": 2,
+          "BackoffRate": 2.0
+        }
+      ],
+      "Catch": [
+        { "ErrorEquals": ["States.ALL"], "Next": "NotifyFailure", "ResultPath": "$.error" }
+      ],
+      "ResultPath": "$.bronze_to_silver_result",
+      "Next": "RunSilverToGold"
+    },
+    "RunSilverToGold": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName.$": "$.glue_silver_to_gold",
+        "Arguments": {
+          "--SILVER_PATH.$": "$.silver_path",
+          "--GOLD_PATH.$": "$.gold_path",
+          "--load_date.$": "$.load_date"
+        }
+      },
+      "Retry": [
+        { "ErrorEquals": ["States.TaskFailed"], "IntervalSeconds": 30, "MaxAttempts": 2 }
+      ],
+      "Catch": [
+        { "ErrorEquals": ["States.ALL"], "Next": "NotifyFailure", "ResultPath": "$.error" }
+      ],
+      "ResultPath": "$.silver_to_gold_result",
+      "Next": "NotifySuccess"
+    },
+    "NotifySuccess": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::sns:publish",
+      "Parameters": {
+        "TopicArn.$": "$.notify_topic_arn",
+        "Subject": "orders medallion DAG succeeded",
+        "Message.$": "States.JsonToString($)"
+      },
+      "End": true
+    },
+    "NotifyFailure": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::sns:publish",
+      "Parameters": {
+        "TopicArn.$": "$.notify_topic_arn",
+        "Subject": "orders medallion DAG FAILED",
+        "Message.$": "States.JsonToString($)"
+      },
+      "Next": "FailState"
+    },
+    "FailState": {
+      "Type": "Fail",
+      "Error": "MedallionDagFailed",
+      "Cause": "A step in the orders medallion DAG failed; see NotifyFailure message."
+    }
+  }
+}

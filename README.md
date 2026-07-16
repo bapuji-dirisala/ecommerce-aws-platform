@@ -10,7 +10,7 @@
 > consumers. Every service in Terraform; every IAM policy hand-written;
 > every line runs locally against LocalStack + DuckDB for a $0 demo.
 
-**Status (2026-10-25):** Phases 6 + 7 shipped — Glue Data Catalog (bronze/silver/gold DBs) + bronze crawler + two Glue PySpark jobs (`orders_b2s`, `orders_s2g`) + Athena partition projection DDL for silver + DuckDB equivalents for laptop/CI iteration. Hand-written IAM, snappy Parquet, no `MSCK REPAIR` needed.
+**Status (2026-10-25):** Phases 8 + 9 shipped — the whole orders medallion runs under a Step Functions STANDARD state machine (committed ASL JSON with parallel branches, Glue `startJobRun.sync`, retry + catch, SNS success/failure) + Lake Formation registers the three S3 locations, defines three LF-tags, and grants tag-based SELECT to an analyst role. Hand-written SFN execution role, no AWS-managed catch-all.
 
 ## Why this project
 
@@ -69,8 +69,8 @@ me to spend money proving it works.
 | 5  | Ingest path 3 — Kinesis Firehose → S3 bronze (clickstream, hourly) | [docs/phase-05-clickstream-firehose.md](docs/phase-05-clickstream-firehose.md) | shipped     |
 | 6  | Glue Data Catalog + crawlers; Glue job: bronze → silver cast/dedup | [docs/phase-06-07-glue-medallion.md](docs/phase-06-07-glue-medallion.md) | shipped     |
 | 7  | Silver → gold Spark job (local PySpark; Glue production target) | [docs/phase-06-07-glue-medallion.md](docs/phase-06-07-glue-medallion.md) | shipped     |
-| 8  | Step Functions orchestration — DAG tying bronze → silver → gold | *coming soon*                                | planned     |
-| 9  | Lake Formation — row-level security, column masking, LF-tag grants | *coming soon*                             | planned     |
+| 8  | Step Functions orchestration — DAG tying bronze → silver → gold | [docs/phase-08-09-step-functions-lake-formation.md](docs/phase-08-09-step-functions-lake-formation.md) | shipped     |
+| 9  | Lake Formation — row-level security, column masking, LF-tag grants | [docs/phase-08-09-step-functions-lake-formation.md](docs/phase-08-09-step-functions-lake-formation.md) | shipped     |
 | 10 | Redshift Serverless + Spectrum — external tables over S3 gold | *coming soon*                                 | planned     |
 | 11 | SNS/SQS fan-out — order-status notifications + Lambda consumer | *coming soon*                                | planned     |
 | 12 | Observability + CI/CD — CloudWatch dashboards, GHA terraform plan/apply | *coming soon*                        | planned     |

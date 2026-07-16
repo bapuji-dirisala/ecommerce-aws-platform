@@ -50,6 +50,42 @@ variable "lambda_partner_csv_zip" {
   default     = ""
 }
 
+variable "lambda_ingest_summary_zip" {
+  description = "Path to the ingest-summary Lambda zip (Phase 8). Empty disables Step Functions."
+  type        = string
+  default     = ""
+}
+
+variable "summary_lambda_arn_override" {
+  description = "Explicit ARN for the summary Lambda (Phase 8). Used when the Lambda is built outside this stack."
+  type        = string
+  default     = "arn:aws:lambda:us-east-1:000000000000:function:ingest-summary"
+}
+
+variable "notify_topic_arn" {
+  description = "SNS topic ARN for Step Functions success/failure notifications (set by Phase 11)."
+  type        = string
+  default     = ""
+}
+
+variable "enable_lake_formation" {
+  description = "Register the lakehouse with Lake Formation (Phase 9). Skipped in local because LocalStack LF is partial."
+  type        = bool
+  default     = false
+}
+
+variable "lf_registration_role_arn" {
+  description = "Role Lake Formation assumes to register S3 locations. Required when enable_lake_formation=true."
+  type        = string
+  default     = ""
+}
+
+variable "analyst_role_arn" {
+  description = "Analyst IAM role to grant tag-based SELECT on silver + gold low-sensitivity data. Empty to skip."
+  type        = string
+  default     = ""
+}
+
 variable "log_retention_days" {
   description = "CloudWatch log retention for Lambda + API Gateway log groups."
   type        = number

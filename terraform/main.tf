@@ -107,3 +107,39 @@ module "glue_catalog" {
   glue_role_arn = module.iam_baseline.glue_service_role_arn
   tags          = local.common_tags
 }
+
+# Phase 8 — Step Functions state machine for the orders medallion DAG.
+# Gated on the summary-lambda zip + the notify topic from Phase 11 (SNS fan-out).
+module "step_functions" {
+  count  = var.lambda_ingest_summary_zip != "" && var.notify_topic_arn != "" ? 1 : 0
+  source = "./modules/step-functions"
+
+  name_prefix = local.name_prefix
+  suffix      = local.bucket_suffix
+  glue_job_arns = [
+    "arn:aws:glue:${var.aws_region}:*:job/${module.glue_catalog.orders_bronze_to_silver_job_name}",
+    "arn:aws:glue:${var.aws_region}:*:job/${module.glue_catalog.orders_silver_to_gold_job_name}",
+  ]
+  summary_lambda_arn = var.summary_lambda_arn_override
+  notify_topic_arn   = var.notify_topic_arn
+  log_retention_days = var.log_retention_days
+  tags               = local.common_tags
+}
+
+# Phase 9 — Lake Formation (tag registration + grants). Gated behind
+# var.enable_lake_formation because LF requires an AWS account bootstrap
+# that LocalStack doesn't fully support.
+module "lake_formation" {
+  count  = var.enable_lake_formation ? 1 : 0
+  source = "./modules/lake-formation"
+
+  bronze_bucket_arn        = module.s3_lakehouse.bronze_bucket_arn
+  silver_bucket_arn        = module.s3_lakehouse.silver_bucket_arn
+  gold_bucket_arn          = module.s3_lakehouse.gold_bucket_arn
+  bronze_database_name     = module.glue_catalog.bronze_database_name
+  silver_database_name     = module.glue_catalog.silver_database_name
+  gold_database_name       = module.glue_catalog.gold_database_name
+  lf_registration_role_arn = var.lf_registration_role_arn
+  analyst_role_arn         = var.analyst_role_arn
+  tags                     = local.common_tags
+}
