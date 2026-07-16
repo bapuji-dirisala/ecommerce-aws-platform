@@ -80,3 +80,16 @@ module "partner_csv_ingest" {
   log_retention_days        = var.log_retention_days
   tags                      = local.common_tags
 }
+
+# Phase 5 — Kinesis Firehose delivery stream for clickstream events.
+# Always on; no artifact to build (Firehose is a managed service).
+module "clickstream_firehose" {
+  source = "./modules/clickstream-firehose"
+
+  name_prefix                = local.name_prefix
+  suffix                     = local.bucket_suffix
+  bronze_bucket_arn          = module.s3_lakehouse.bronze_bucket_arn
+  firehose_delivery_role_arn = module.iam_baseline.firehose_delivery_role_arn
+  log_retention_days         = var.log_retention_days
+  tags                       = local.common_tags
+}

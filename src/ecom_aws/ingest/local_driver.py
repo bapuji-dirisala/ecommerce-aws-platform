@@ -18,6 +18,7 @@ from datetime import UTC, datetime
 from decimal import Decimal
 
 from ecom_aws.generator import GeneratorConfig, generate_bundle
+from ecom_aws.ingest.firehose_client import put_batch
 from ecom_aws.ingest.orders_api import handler
 
 
@@ -86,3 +87,24 @@ def drive_orders_api_local(*, count: int, seed: int, bucket: str | None = None) 
             }
         )
     return results
+
+
+def drive_clickstream_firehose_local(*, count: int, seed: int, stream: str | None = None) -> int:
+    """Generate ``count`` clickstream events and push them to Firehose.
+
+    Returns the total records accepted by Firehose (``total - failed``).
+    """
+    os.environ.setdefault("AWS_ENDPOINT_URL", _default_endpoint())
+    os.environ.setdefault("AWS_DEFAULT_REGION", "us-east-1")
+    os.environ.setdefault("AWS_ACCESS_KEY_ID", "test")
+    os.environ.setdefault("AWS_SECRET_ACCESS_KEY", "test")
+
+    cfg = GeneratorConfig(
+        seed=seed,
+        num_products=50,
+        num_customers=100,
+        num_orders=10,
+        num_clickstream_events=count,
+    )
+    bundle = generate_bundle(cfg)
+    return put_batch(bundle.clickstream, stream=stream)
