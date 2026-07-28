@@ -143,3 +143,44 @@ module "lake_formation" {
   analyst_role_arn         = var.analyst_role_arn
   tags                     = local.common_tags
 }
+
+# Phase 10 — Redshift Serverless + Spectrum. Gated on
+# var.enable_redshift_serverless because it requires a VPC + a password
+# that LocalStack doesn't fully emulate.
+module "redshift_serverless" {
+  count  = var.enable_redshift_serverless ? 1 : 0
+  source = "./modules/redshift-serverless"
+
+  name_prefix     = local.name_prefix
+  suffix          = local.bucket_suffix
+  gold_bucket_arn = module.s3_lakehouse.gold_bucket_arn
+  admin_password  = var.redshift_admin_password
+  base_rpu        = var.redshift_base_rpu
+  max_rpu         = var.redshift_max_rpu
+  tags            = local.common_tags
+}
+
+# Phase 11 — SNS → SQS fan-out for order-status events. Always on; the
+# Lambda consumer is gated on its zip var.
+module "order_status_fanout" {
+  source = "./modules/sns-sqs-fanout"
+
+  name_prefix  = local.name_prefix
+  suffix       = local.bucket_suffix
+  consumer_zip = var.lambda_order_status_consumer_zip
+  tags         = local.common_tags
+}
+
+# Phase 12 — Observability (CloudWatch dashboard + alarms).
+module "observability" {
+  source = "./modules/observability"
+
+  name_prefix        = local.name_prefix
+  suffix             = local.bucket_suffix
+  region             = var.aws_region
+  orders_b2s_job     = module.glue_catalog.orders_bronze_to_silver_job_name
+  state_machine_arn  = try(module.step_functions[0].state_machine_arn, "")
+  notify_topic_arn   = module.order_status_fanout.topic_arn
+  analytics_dlq_name = "${local.name_prefix}-order-status-analytics-dlq-${local.bucket_suffix}"
+  tags               = local.common_tags
+}

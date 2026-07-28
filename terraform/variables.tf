@@ -91,3 +91,34 @@ variable "log_retention_days" {
   type        = number
   default     = 14
 }
+
+variable "enable_redshift_serverless" {
+  description = "Phase 10 — build the Redshift Serverless namespace + workgroup + Spectrum role. Default off because minimum capacity has an hourly cost."
+  type        = bool
+  default     = false
+}
+
+variable "redshift_admin_password" {
+  description = "Admin password for the Redshift namespace. Pass via TF_VAR_redshift_admin_password; never hard-code."
+  type        = string
+  default     = "ChangeMe-Redshift-123!"
+  sensitive   = true
+}
+
+variable "redshift_base_rpu" {
+  description = "Base RPU capacity for Redshift Serverless workgroup."
+  type        = number
+  default     = 8
+}
+
+variable "redshift_max_rpu" {
+  description = "Max RPU cap on the workgroup to protect against runaway queries."
+  type        = number
+  default     = 32
+}
+
+variable "lambda_order_status_consumer_zip" {
+  description = "Phase 11 — zip for the order-status SQS consumer Lambda. Empty = provision SNS + SQS plumbing without the Lambda."
+  type        = string
+  default     = ""
+}
