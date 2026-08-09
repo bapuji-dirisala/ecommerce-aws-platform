@@ -76,9 +76,9 @@ def test_asl_glue_tasks_use_sync_integration():
             continue
         resource = state.get("Resource", "")
         if "glue:startJobRun" in resource:
-            assert resource.endswith(
-                ".sync"
-            ), "Glue job invocations must use the .sync integration for DAG completion."
+            assert resource.endswith(".sync"), (
+                "Glue job invocations must use the .sync integration for DAG completion."
+            )
 
 
 def test_asl_has_retry_and_catch_on_glue_steps():
